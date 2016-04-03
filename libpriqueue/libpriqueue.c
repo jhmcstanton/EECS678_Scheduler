@@ -30,19 +30,23 @@ void priqueue_init(priqueue_t *q, comp_t comparer)
 /**
    Inserts element into internal linked list.
  */
-int insert_with(node_t *head, node_t* new_elem, comp_t comparer){
+int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
     // the current node has >= priority to the next element, new_element recurses
-    if(comparer(head->element, new_elem->element) >= 0){
+    //    printf("cursor: %d, new: %d\n", *(int*)cursor->element, *(int*)new_elem->element);
+    if(comparer(cursor->element, new_elem->element) >= 0){
+	//	printf("cursor >= new\n");
 	// there's nothing left, slap it on the end
-	if(head->next == NULL) {
-	    head->next = new_elem;
+	if(cursor->next == NULL) {
+	    //  printf("new is now tail\n");
+	    cursor->next = new_elem;
 	    return 1;
 	} else { // there is something left, more comparisons need to be done
-	    return 1 + insert_with(head->next, new_elem, comparer);    
+	    //printf("recursing \n");
+	    return 1 + insert_with(cursor->next, new_elem, comparer);    
 	}
     } else { // the new_elem has highest priority, displace the current head of the queue
-	new_elem->next = head;
-	head           = new_elem;
+	//	printf("new_elem > head\n");
+	new_elem->next = cursor;
 	return 0;
     }
 }
@@ -64,7 +68,11 @@ int priqueue_offer(priqueue_t *q, void *ptr)
 	q->head = new_elem;
 	q->head->next = NULL;	
     } else {
-	index = insert_with(q->head, new_elem, q->comparer);
+	node_t *cursor = q->head; 
+	index = insert_with(cursor, new_elem, q->comparer);
+    }
+    if(index == 0){
+	q->head = new_elem;
     }
     q->size++;
     return index;
@@ -124,7 +132,7 @@ void *priqueue_at(priqueue_t *q, int index)
     } else {
 	node_t *temp = q->head;	
 	int i;
-	for(i = 0; i < index; i++){
+	for(i = 1; i < index; i++){
 	    temp = temp->next;
 	}
 	return temp->element;
@@ -200,7 +208,11 @@ void priqueue_destroy(priqueue_t *q)
     while(temp != NULL){
 	prev_temp = temp;
 	temp      = temp->next;
-	free(prev_temp->element);
+	//	printf("freeing node\n");
 	free(prev_temp);
     }
+    q->head = NULL;
+    q->tail = NULL;
+    q->index = NULL;
+    q->size = 0;
 }
