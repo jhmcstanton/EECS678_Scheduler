@@ -81,7 +81,7 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-	return NULL;
+    return q->head->element;
 }
 
 
@@ -95,7 +95,16 @@ void *priqueue_peek(priqueue_t *q)
  */
 void *priqueue_poll(priqueue_t *q)
 {
+    if(q->head == NULL){
 	return NULL;
+    } else {
+	node_t *temp = q->head->next;
+	void *elem   = q->head->element;
+	q->head      = temp;
+	q->size--;
+	free(q->head);
+	return elem;
+    }
 }
 
 
@@ -110,7 +119,16 @@ void *priqueue_poll(priqueue_t *q)
  */
 void *priqueue_at(priqueue_t *q, int index)
 {
+    if(index >= q->size){
 	return NULL;
+    } else {
+	node_t *temp = q->head;	
+	int i;
+	for(i = 0; i < index; i++){
+	    temp = temp->next;
+	}
+	return temp->element;
+    }
 }
 
 
@@ -125,7 +143,8 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-	return 0;
+    
+    return 0;
 }
 
 
@@ -140,7 +159,21 @@ int priqueue_remove(priqueue_t *q, void *ptr)
  */
 void *priqueue_remove_at(priqueue_t *q, int index)
 {
-	return 0;
+    if(index >= q->size){
+	return NULL;
+    } else {
+	node_t *temp = q->head;	
+	void *element;
+	int i;
+	for(i = 0; i < index - 1; i++){
+	    temp = temp->next;
+	}
+	temp->next = temp->next->next;
+	element = temp->next->element;
+	free(temp->next);
+	q->size--;
+	return element;
+    }
 }
 
 
@@ -151,8 +184,8 @@ void *priqueue_remove_at(priqueue_t *q, int index)
   @return the number of elements in the queue
  */
 int priqueue_size(priqueue_t *q)
-{
-	return 0;
+{    
+    return q->size;
 }
 
 
@@ -163,5 +196,11 @@ int priqueue_size(priqueue_t *q)
  */
 void priqueue_destroy(priqueue_t *q)
 {
-
+    node_t *temp = q->head, *prev_temp;
+    while(temp != NULL){
+	prev_temp = temp;
+	temp      = temp->next;
+	free(prev_temp->element);
+	free(prev_temp);
+    }
 }
