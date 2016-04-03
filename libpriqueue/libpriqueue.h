@@ -5,12 +5,40 @@
 #define LIBPRIQUEUE_H_
 
 /**
+  Information regarding each job for maintenance
+*/
+typedef struct _primeta_t
+{
+    int time_remaining;
+    int priority;
+    int arrival_time;
+    int run_time;
+    int job_id;
+} primeta_t;
+
+
+/**
+   Node data structure internal to the linked list implementation of our queue.
+ */
+typedef struct _node_t
+{
+    void *element;
+    struct _node_t *next;
+} node_t;
+
+/**
   Priqueue Data Structure
 */
 typedef struct _priqueue_t
 {
-
+    //primeta_t *jobs;
+    node_t *head;
+    node_t *tail;
+    node_t *index;
+    int(*comparer)(const void *, const void *);
+    int size;
 } priqueue_t;
+
 
 
 void   priqueue_init     (priqueue_t *q, int(*comparer)(const void *, const void *));

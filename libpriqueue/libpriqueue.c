@@ -19,7 +19,11 @@
  */
 void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
 {
-
+    q->head     = NULL;
+    q->tail     = q->head;
+    q->index    = q->head;
+    q->comparer = comparer;
+    q->size     = 0;
 }
 
 
@@ -32,7 +36,7 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-	return -1;
+    return -1;
 }
 
 
