@@ -17,7 +17,8 @@
   @param comparer a function pointer that compares two elements.
   See also @ref comparer-page
  */
-void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
+//void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
+void priqueue_init(priqueue_t *q, comp_t comparer)
 {
     q->head     = NULL;
     q->tail     = q->head;
@@ -26,6 +27,25 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
     q->size     = 0;
 }
 
+/**
+   Inserts element into internal linked list.
+ */
+int insert_with(node_t *head, node_t* new_elem, comp_t comparer){
+    // the current node has >= priority to the next element, new_element recurses
+    if(comparer(head->element, new_elem->element) >= 0){
+	// there's nothing left, slap it on the end
+	if(head->next == NULL) {
+	    head->next = new_elem;
+	    return 1;
+	} else { // there is something left, more comparisons need to be done
+	    return 1 + insert_with(head->next, new_elem, comparer);    
+	}
+    } else { // the new_elem has highest priority, displace the current head of the queue
+	new_elem->next = head;
+	head           = new_elem;
+	return 0;
+    }
+}
 
 /**
   Inserts the specified element into this priority queue.
@@ -36,7 +56,18 @@ void priqueue_init(priqueue_t *q, int(*comparer)(const void *, const void *))
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-    return -1;
+    int index = 0;
+    node_t *new_elem = (node_t *) malloc(1 * sizeof(node_t));
+    new_elem->element = ptr;
+    new_elem->next    = NULL;
+    if(q->size == 0){
+	q->head = new_elem;
+	q->head->next = NULL;	
+    } else {
+	index = insert_with(q->head, new_elem, q->comparer);
+    }
+    q->size++;
+    return index;
 }
 
 

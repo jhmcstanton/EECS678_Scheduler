@@ -26,6 +26,9 @@ typedef struct _node_t
     struct _node_t *next;
 } node_t;
 
+
+typedef int(*comp_t)(const void *, const void *);
+
 /**
   Priqueue Data Structure
 */
@@ -35,7 +38,8 @@ typedef struct _priqueue_t
     node_t *head;
     node_t *tail;
     node_t *index;
-    int(*comparer)(const void *, const void *);
+    //    int(*comparer)(const void *, const void *);
+    comp_t comparer;
     int size;
 } priqueue_t;
 
