@@ -2,4 +2,6 @@
 *.log
 *.aux
 doc/
-*.o
+**/*.o
+simulator
+queuetest

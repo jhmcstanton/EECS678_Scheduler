@@ -30,10 +30,10 @@ void priqueue_init(priqueue_t *q, comp_t comparer)
 /**
    Inserts element into internal linked list.
  */
-int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
+/*int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
     // the current node has >= priority to the next element, new_element recurses
-    //    printf("cursor: %d, new: %d\n", *(int*)cursor->element, *(int*)new_elem->element);
-    if(comparer(cursor->element, new_elem->element) >= 0){
+    printf("cursor: %d, new: %d\n", *(int*)cursor->element, *(int*)new_elem->element);
+    if(comparer(cursor->element, new_elem->element) <= 0){
 	//	printf("cursor >= new\n");
 	// there's nothing left, slap it on the end
 	if(cursor->next == NULL) {
@@ -49,7 +49,7 @@ int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
 	new_elem->next = cursor;
 	return 0;
     }
-}
+}*/
 
 /**
   Inserts the specified element into this priority queue.
@@ -60,16 +60,37 @@ int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
+    printf("Entering offer, elem: %d\n", *(int*)ptr);
     int index = 0;
     node_t *new_elem = (node_t *) malloc(1 * sizeof(node_t));
     new_elem->element = ptr;
     new_elem->next    = NULL;
+    node_t *cursor = q->head, *prev_cursor = NULL; 	
     if(q->size == 0){
 	q->head = new_elem;
 	q->head->next = NULL;	
     } else {
-	node_t *cursor = q->head; 
-	index = insert_with(cursor, new_elem, q->comparer);
+	while(cursor != NULL){
+	    //	    printf("inside offer\n");
+	    if(q->comparer(cursor->element, new_elem->element) <= 0){
+		index++;
+		if(cursor->next == NULL){
+		    cursor->next = new_elem;
+		    break;
+		} else {
+		    //  printf("woooah\n");
+		    prev_cursor = cursor;
+		    cursor      = cursor->next;
+		}
+	    } else {
+		//	printf("high priority, should break here\n");
+		new_elem->next    = cursor;
+		if(prev_cursor != NULL){
+		    prev_cursor->next = new_elem;
+		}
+		break;
+	    }
+	}
     }
     if(index == 0){
 	q->head = new_elem;
@@ -108,9 +129,9 @@ void *priqueue_poll(priqueue_t *q)
     } else {
 	node_t *temp = q->head->next;
 	void *elem   = q->head->element;
+	free(q->head);
 	q->head      = temp;
 	q->size--;
-	free(q->head);
 	return elem;
     }
 }
@@ -132,7 +153,7 @@ void *priqueue_at(priqueue_t *q, int index)
     } else {
 	node_t *temp = q->head;	
 	int i;
-	for(i = 1; i < index; i++){
+	for(i = 0; i < index; i++){
 	    temp = temp->next;
 	}
 	return temp->element;
@@ -151,8 +172,36 @@ void *priqueue_at(priqueue_t *q, int index)
  */
 int priqueue_remove(priqueue_t *q, void *ptr)
 {
-    
-    return 0;
+    if(ptr == NULL){
+	return 0;
+    }
+
+    node_t *cursor = q->head, *prev_cursor = NULL;
+    int num_removed = 0, index = 0;
+    while(cursor != NULL){
+	// ... assuming this thing only has integers...
+        if(*(int *)ptr == *(int *)(cursor->element)){
+	    num_removed++;
+
+	    if(prev_cursor == NULL){ // at the head of the list
+		q->head = cursor->next;
+	    } else { // somewhere in the middle or end of the list
+		prev_cursor->next = cursor->next;
+	    }
+	    free(cursor);
+
+	    if(prev_cursor == NULL){
+		cursor = q->head;
+	    } else {
+		cursor = prev_cursor->next;
+	    }
+	} else {
+	    prev_cursor = cursor;
+	    cursor      = cursor->next;
+	}	
+    }
+    q->size = q->size - num_removed;
+    return num_removed;
 }
 
 

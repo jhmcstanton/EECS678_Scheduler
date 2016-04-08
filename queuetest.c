@@ -16,12 +16,78 @@ int compare2(const void * a, const void * b)
 	return ( *(int*)b - *(int*)a );
 }
 
+void test_destroy(priqueue_t *q){
+    printf("Testing destroy function\n");
+    
+    const int num_vals   = 3;
+    int values[num_vals]; 
+    int i, temp;
+
+    printf("Destroy test 1\n");
+    for(i = 0; i < num_vals; i++){
+	values[i] = i;
+	priqueue_offer(q, &values[i]);
+    } 
+
+    node_t *temp_q = q->head;
+    i = 0;
+    printf("Inspecting queue pre destroy\n");
+    while(temp_q != NULL){
+	i++;
+	printf("Found element: %d, num found: %d\n", *(int*)(temp_q->element), i);
+	temp_q = temp_q->next;
+    }
+
+    priqueue_destroy(q);
+
+    temp_q = q->head;
+    i = 0;
+    printf("Inspecting queue post destroy\n");
+    while(temp_q != NULL){
+	i++;
+	printf("Found element: %d, num found: %d\n", *(int*)(temp_q->element), i);
+	temp_q = temp_q->next;
+    }
+
+    printf("Destroy test 2, empty case\n");
+    priqueue_destroy(q);
+
+    printf("Destroy test 3, all unique\n");
+    for(i = 0; i < num_vals; i++){
+	priqueue_offer(q, &i);
+    } 
+    priqueue_destroy(q);
+    
+    printf("Finished destroy test\n");
+}
+
+void print_queue(priqueue_t *q){
+    node_t *cursor = q->head;
+    int index = 0;
+    printf("Trying to print queue\n");
+    while(cursor != NULL){
+	if(cursor->element == NULL){
+	    printf("adasdqweasd\n");
+	}
+	printf("index : %d, elem: %d\n", index, *(int*)cursor->element);
+	index++;
+	cursor = cursor->next;
+    }
+    printf("Printed the queue\n");
+}
+
 int main()
 {
 	priqueue_t q, q2;
 
 	priqueue_init(&q, compare1);
 	priqueue_init(&q2, compare2);
+
+	printf("New tests \n");
+
+	//	test_destroy(&q);
+	
+	printf("Provided tests starting ... \n");
 
 	/* Pupulate some data... */
 	int *values = malloc(100 * sizeof(int));
@@ -38,18 +104,29 @@ int main()
 	priqueue_offer(&q, &values[12]);
 	printf("Total elements: %d (expected 5).\n", priqueue_size(&q));
 
+	print_queue(&q);
+
 	int val = *((int *)priqueue_poll(&q));
 	printf("Top element: %d (expected 12).\n", val);
-	printf("Total elements: %d (expected 4).\n", priqueue_size(&q));
+	printf("Total elements: %d (expected 4).\n", priqueue_size(&q));	
 
-	int vals_removed = priqueue_remove(&q, &values[12]);
+	print_queue(&q);
+
+	int vals_removed = priqueue_remove(&q, &values[12]);	
 	printf("Elements removed: %d (expected 2).\n", vals_removed);
 	printf("Total elements: %d (expected 2).\n", priqueue_size(&q));
 
-	priqueue_offer(&q, &values[10]);
-	priqueue_offer(&q, &values[30]);
-	priqueue_offer(&q, &values[20]);
+	print_queue(&q);
 
+	printf("Adding to q\n");
+	priqueue_offer(&q, &values[10]);
+	print_queue(&q);
+	priqueue_offer(&q, &values[30]);
+	print_queue(&q);
+	priqueue_offer(&q, &values[20]);
+	print_queue(&q);
+
+	printf("Adding to q2\n");
 	priqueue_offer(&q2, &values[10]);
 	priqueue_offer(&q2, &values[30]);
 	priqueue_offer(&q2, &values[20]);
@@ -65,8 +142,10 @@ int main()
 		printf("%d ", *((int *)priqueue_at(&q2, i)) );
 	printf("\n");
 
-	priqueue_destroy(&q2);
+	printf("destroy 1\n");
 	priqueue_destroy(&q);
+	printf("destroy 2\n");
+	priqueue_destroy(&q2);
 
 	free(values);
 
