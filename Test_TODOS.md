@@ -67,14 +67,14 @@ Test ideas based on priqueue_* API
 
 ## priqueue_poll
 
-- ~No elements (expect size 0, elem NULL)~
-- ~One element (expect size 0, elem correct)~
-- ~Multiple elements (expects size N - 1, elem correct)~
+- ~~No elements (expect size 0, elem NULL)~~
+- ~~One element (expect size 0, elem correct)~~
+- ~~Multiple elements (expects size N - 1, elem correct)~~
 
 ## priqueue_peek
 
-- ~No elements (expect size 0, elem NULL)~
-- ~One or more elements (expect size N, elem correct)~
+- ~~No elements (expect size 0, elem NULL)~~
+- ~~One or more elements (expect size N, elem correct)~~
 
 # Scheduler
 
