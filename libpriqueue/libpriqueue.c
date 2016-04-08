@@ -60,7 +60,6 @@ void priqueue_init(priqueue_t *q, comp_t comparer)
  */
 int priqueue_offer(priqueue_t *q, void *ptr)
 {
-    printf("Entering offer, elem: %d\n", *(int*)ptr);
     int index = 0;
     node_t *new_elem = (node_t *) malloc(1 * sizeof(node_t));
     new_elem->element = ptr;
@@ -71,19 +70,16 @@ int priqueue_offer(priqueue_t *q, void *ptr)
 	q->head->next = NULL;	
     } else {
 	while(cursor != NULL){
-	    //	    printf("inside offer\n");
 	    if(q->comparer(cursor->element, new_elem->element) <= 0){
 		index++;
 		if(cursor->next == NULL){
 		    cursor->next = new_elem;
 		    break;
 		} else {
-		    //  printf("woooah\n");
 		    prev_cursor = cursor;
 		    cursor      = cursor->next;
 		}
 	    } else {
-		//	printf("high priority, should break here\n");
 		new_elem->next    = cursor;
 		if(prev_cursor != NULL){
 		    prev_cursor->next = new_elem;

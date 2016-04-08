@@ -4,7 +4,7 @@
 #include "../libpriqueue.h"
 #include <stdbool.h>
 
-bool no_element_test();
-bool multiple_element_test();
+bool peek_no_element_test();
+bool peek_multiple_element_test();
 
 #endif 

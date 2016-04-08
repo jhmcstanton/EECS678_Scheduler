@@ -94,7 +94,7 @@ int main()
     printf("%s Total Number of Successes: %s%d%s\n", 
 	   KBLU, 
 	   success_count == NUM_TESTS ? KWHT : KRED, 
-	   NUM_TESTS, RESET);
+	   success_count, RESET);
 
     printf("Done with unit tests, running provided tests \n\n\n");
 
