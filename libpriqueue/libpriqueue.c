@@ -110,7 +110,11 @@ int priqueue_offer(priqueue_t *q, void *ptr)
  */
 void *priqueue_peek(priqueue_t *q)
 {
-    return q->head->element;
+    if(q->head != NULL){
+	return q->head->element;
+    } else {
+	return NULL;
+    }
 }
 
 

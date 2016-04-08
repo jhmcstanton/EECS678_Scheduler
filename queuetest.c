@@ -5,6 +5,8 @@
 #include <stdlib.h>
 
 #include "libpriqueue/libpriqueue.h"
+#include "libpriqueue/tests/libpriqueue_tests.h"
+#include "test_utils.h"
 
 int compare1(const void * a, const void * b)
 {
@@ -78,6 +80,24 @@ void print_queue(priqueue_t *q){
 
 int main()
 {
+    printf("Running new unit tests\n");
+
+    int i, success_count = 0;
+    for(i = 0; i < NUM_TESTS; i++){
+	printf("Test %d\n", i+1);
+	if(queue_tests[i]()){
+	    success_count++;
+	}
+    }
+
+    printf("%s Total Number of Tests    : %s%d\n", KBLU, KWHT, NUM_TESTS);
+    printf("%s Total Number of Successes: %s%d%s\n", 
+	   KBLU, 
+	   success_count == NUM_TESTS ? KWHT : KRED, 
+	   NUM_TESTS, RESET);
+
+    printf("Done with unit tests, running provided tests \n\n\n");
+
 	priqueue_t q, q2;
 
 	priqueue_init(&q, compare1);
@@ -92,7 +112,6 @@ int main()
 	/* Pupulate some data... */
 	int *values = malloc(100 * sizeof(int));
 
-	int i;
 	for (i = 0; i < 100; i++)
 		values[i] = i;
 
