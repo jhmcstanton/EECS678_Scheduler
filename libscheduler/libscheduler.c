@@ -47,7 +47,7 @@ int SJF_comp(const job_t *in_queue, const job_t *new_job){
     return in_queue->run_time >= new_job->run_time;
 }
 
-int PSFJ_comp(const job_t *in_queue, const job_t *new_job){
+int PSJF_comp(const job_t *in_queue, const job_t *new_job){
     return in_queue->time_remaining >= new_job->time_remaining;
 }
 
@@ -66,7 +66,15 @@ int PPRI_comp(const job_t *in_queue, const job_t *new_job){
    @return a function pointer for comparing two jobs
 */
 comp_t get_comparer(scheme_t scheme){
-    return NULL;
+    switch(scheme){
+    case FCFS : return (comp_t) FCFS_comp;
+    case SJF  : return (comp_t) SJF_comp ;
+    case PSJF : return (comp_t) PSJF_comp;
+    case PRI  : return (comp_t) PRI_comp ;
+    case PPRI : return (comp_t) PPRI_comp;
+    case RR   : return (comp_t) RR_comp;
+    default   : return NULL;
+    }
 }
 
 
