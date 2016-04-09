@@ -4,10 +4,24 @@
 #ifndef LIBSCHEDULER_H_
 #define LIBSCHEDULER_H_
 
+#include "../libpriqueue/libpriqueue.h"
+
+#include <stdbool.h>
+
 /**
   Constants which represent the different scheduling algorithms
 */
 typedef enum {FCFS = 0, SJF, PSJF, PRI, PPRI, RR} scheme_t;
+
+typedef struct _scheduler_t_ {
+    priqueue_t jobs;
+    int num_cores;
+    scheme_t scheme;
+    comp_t pri_comp;
+    float avg_resp_time;
+    float avg_wait_time;
+    float avg_turn_around_time;
+} scheduler_t;
 
 void  scheduler_start_up               (int cores, scheme_t scheme);
 int   scheduler_new_job                (int job_number, int time, int running_time, int priority);

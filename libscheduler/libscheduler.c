@@ -9,6 +9,12 @@
 #include "../libpriqueue/libpriqueue.h"
 
 
+/*
+  Globals for scheduling
+ */
+
+scheduler_t scheduler;
+
 /**
   Stores information making up a job to be scheduled including any statistics.
 
@@ -16,8 +22,52 @@
 */
 typedef struct _job_t
 {
-
+    int time_remaining;
+    int priority;
+    int arrival_time;
+    int run_time;
+    int job_id;
+    bool responded_prev;
 } job_t;
+
+
+/**
+   Comparison functions for each scheme
+ */
+
+int RR_comp(const job_t *in_queue, const job_t *new_job){
+    return -1;
+}
+
+int FCFS_comp(const job_t *in_queue, const job_t *new_job){
+    return -1; 
+}
+
+int SJF_comp(const job_t *in_queue, const job_t *new_job){
+    return in_queue->run_time >= new_job->run_time;
+}
+
+int PSFJ_comp(const job_t *in_queue, const job_t *new_job){
+    return in_queue->time_remaining >= new_job->time_remaining;
+}
+
+int PRI_comp(const job_t *in_queue, const job_t *new_job){
+    return in_queue->priority <= new_job->priority;
+}
+
+int PPRI_comp(const job_t *in_queue, const job_t *new_job){
+    return -1; // fix this
+}
+
+
+/**
+   Helper function to determine the comparison function to use based on a user picked scheme.
+   @param scheme - scheme chosen by user
+   @return a function pointer for comparing two jobs
+*/
+comp_t get_comparer(scheme_t scheme){
+    return NULL;
+}
 
 
 /**
@@ -34,9 +84,29 @@ typedef struct _job_t
 */
 void scheduler_start_up(int cores, scheme_t scheme)
 {
+    scheduler.num_cores = cores;
+    scheduler.scheme    = scheme;
+    scheduler.pri_comp  = get_comparer(scheme);
+    priqueue_init(&scheduler.jobs, scheduler.pri_comp);
 
+    scheduler.avg_resp_time        = 0;
+    scheduler.avg_wait_time        = 0;
+    scheduler.avg_turn_around_time = 0;
 }
 
+void check_response_time(int time){
+    job_t *job = priqueue_peek(&scheduler.jobs);
+    if(job == NULL){
+	return;
+    } else if(!job->responded_prev){
+	job->responded_prev = true;
+	if(scheduler.avg_resp_time == 0){
+	    scheduler.avg_resp_time = time - job->arrival_time;
+	} else {
+	    scheduler.avg_resp_time = (scheduler.avg_resp_time + (time - job->arrival_time)) / 2;
+	}
+    }
+}
 
 /**
   Called when a new job arrives.
@@ -60,7 +130,18 @@ void scheduler_start_up(int cores, scheme_t scheme)
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-	return -1;
+    job_t *new_job = (job_t *) malloc(1 * sizeof(job_t));
+    new_job->job_id         = job_number;
+    new_job->arrival_time   = time;
+    new_job->run_time       = running_time;
+    new_job->priority       = priority;
+    new_job->time_remaining = running_time;
+    new_job->responded_prev = false;
+
+    priqueue_offer(&scheduler.jobs, &new_job);
+    check_response_time(time);
+    // tentative, update this if multiple core option is done
+    return 0;
 }
 
 
@@ -80,9 +161,36 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(int core_id, int job_number, int time)
 {
-	return -1;
-}
+    job_t *job_cursor = priqueue_poll(&scheduler.jobs);
+    int turn_around_time, wait_time;
+    if(job_cursor != NULL){
+	// get turnaround time updates
+	turn_around_time = time - job_cursor->arrival_time;
+	wait_time        = time - job_cursor->arrival_time - job_cursor->run_time;
+	if(scheduler.avg_turn_around_time == 0){
+	    scheduler.avg_turn_around_time = turn_around_time;
+	} else {
+	    scheduler.avg_turn_around_time  = (scheduler.avg_turn_around_time + turn_around_time) / 2;
+	}
 
+	// get wait time updates
+	if(scheduler.avg_wait_time == 0){
+	    scheduler.avg_wait_time = wait_time;
+	} else {
+	    scheduler.avg_wait_time = (scheduler.avg_wait_time + wait_time) / 2;
+	}
+	free(job_cursor);
+    }
+    // still assuming single core
+    if(scheduler.jobs.size == 0){
+	return -1;
+    } else {
+	check_response_time(time);
+
+	job_cursor = priqueue_peek(&scheduler.jobs);
+	return job_cursor->job_id;
+    }    
+}
 
 /**
   When the scheme is set to RR, called when the quantum timer has expired
@@ -99,7 +207,16 @@ int scheduler_job_finished(int core_id, int job_number, int time)
  */
 int scheduler_quantum_expired(int core_id, int time)
 {
+    // no jobs, remain idle
+    if(scheduler.jobs.size == 0){
 	return -1;
+    }
+
+    job_t *job = priqueue_poll(&scheduler.jobs);
+    priqueue_offer(&scheduler.jobs, job);
+    check_response_time(time);
+    job        = priqueue_peek(&scheduler.jobs);
+    return job->job_id;
 }
 
 
@@ -112,7 +229,7 @@ int scheduler_quantum_expired(int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-	return 0.0;
+    return scheduler.avg_wait_time;
 }
 
 
@@ -125,7 +242,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-	return 0.0;
+    return scheduler.avg_turn_around_time;
 }
 
 
@@ -138,7 +255,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-	return 0.0;
+    return scheduler.avg_resp_time;
 }
 
 
@@ -150,9 +267,18 @@ float scheduler_average_response_time()
 */
 void scheduler_clean_up()
 {
-
+    job_t *job_cursor;
+    while(scheduler.jobs.size > 0){
+	job_cursor = priqueue_poll(&scheduler.jobs);
+	free(job_cursor);
+    }
+    priqueue_destroy(&scheduler.jobs);
 }
 
+void debug_print(job_t *job){
+    printf("Job [%d]: Priority: [%d], Arrival : [%d], Run-Time: [%d], Time-Remaining: [%d]\n",
+	   job->job_id, job->priority, job->arrival_time, job->run_time, job->time_remaining);
+}
 
 /**
   This function may print out any debugging information you choose. This
@@ -167,5 +293,11 @@ void scheduler_clean_up()
  */
 void scheduler_show_queue()
 {
-
+    //    priqueue_mut_map(&scheduler.jobs, debug_print);
+    node_t *cursor = scheduler.jobs.head;
+    
+    while(cursor != NULL){
+	debug_print(cursor->element);
+	cursor = cursor->next;
+    }
 }

@@ -4,17 +4,17 @@
 #ifndef LIBPRIQUEUE_H_
 #define LIBPRIQUEUE_H_
 
-/**
+/*
   Information regarding each job for maintenance
 */
-typedef struct _primeta_t
+/*typedef struct _primeta_t
 {
     int time_remaining;
     int priority;
     int arrival_time;
     int run_time;
     int job_id;
-} primeta_t;
+} primeta_t;*/
 
 
 /**
@@ -28,6 +28,7 @@ typedef struct _node_t
 
 
 typedef int(*comp_t)(const void *, const void *);
+typedef void(*map_apply_t)(void *);
 
 /**
   Priqueue Data Structure
@@ -56,5 +57,7 @@ void * priqueue_remove_at(priqueue_t *q, int index);
 int    priqueue_size     (priqueue_t *q);
 
 void   priqueue_destroy  (priqueue_t *q);
+
+void   priqueue_mut_map  (priqueue_t *q, map_apply_t ap);
 
 #endif /* LIBPQUEUE_H_ */

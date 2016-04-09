@@ -265,3 +265,12 @@ void priqueue_destroy(priqueue_t *q)
     q->index = NULL;
     q->size = 0;
 }
+
+void priqueue_mut_map(priqueue_t *q, map_apply_t ap){
+    node_t *cursor = q->head;
+
+    while(cursor != NULL){
+	ap(cursor->element);
+	cursor = cursor->next;
+    }
+}
