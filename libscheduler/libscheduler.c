@@ -284,8 +284,7 @@ void scheduler_clean_up()
     priqueue_destroy(&scheduler.jobs);
 }
 
-void debug_print(job_t *job){
-    //    printf("  Job [%d]: Priority: [%d], Arrival : [%d], Run-Time: [%d], Time-Remaining: [%d]\n",
+void debug_print(const job_t *job){
     printf("  %14d | %14d | %14d | %14d | %14d \n",
 	   job->job_id, job->priority, job->arrival_time, job->run_time, job->time_remaining);
 }
@@ -308,8 +307,5 @@ void scheduler_show_queue()
     
     printf("\n             Job |       Priority |        Arrival |       Run-Time | Time-Remaining\n");
     printf("-----------------|----------------|----------------|----------------|---------------\n");
-    while(cursor != NULL){
-	debug_print(cursor->element);
-	cursor = cursor->next;
-    }
+    priqueue_mut_map(&scheduler.jobs, (map_apply_t) debug_print);
 }
