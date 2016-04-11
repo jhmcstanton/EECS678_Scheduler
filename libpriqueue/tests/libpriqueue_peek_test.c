@@ -29,21 +29,16 @@ bool peek_no_element_test(){
 
 bool peek_multiple_element_test(){
     priqueue_t q;
-    int *elem, i, num_elems = 10;
+    const int num_elems = 10;
+    int *elem, i;
+    int elems[num_elems];
     bool result;
     char helper_buffer[10];
     priqueue_init(&q, &peek_comparer);
     printf("Peek: %d Elements; Increasing\n", num_elems);
     for(i = 0; i < num_elems; i++){
-	printf("offering %d\n", i);
-	priqueue_offer(&q, &i);	
-    }
-
-    node_t *cursor = q.head;
-    printf("printing queue in p_m_e_s\n REMOVE THIS !!!!\n");
-    while(cursor != NULL){
-	printf("elem val: %d\n", *(int*)cursor->element);
-	cursor = cursor->next;
+	elems[i] = i;
+	priqueue_offer(&q, &elems[i]);	
     }
 
     elem   = priqueue_peek(&q);
