@@ -14,7 +14,6 @@ bool peek_no_element_test(){
 
     printf("Peek: No Elements\n");
     elem = priqueue_peek(&q);
-    printf("asdasd\n");
     result = (elem == NULL) && (q.size == 0);
     print_prefix(result);
     printf("elem is %s (expected NULL), size is %d (expected 0)\n", 
