@@ -1,7 +1,6 @@
 import System.Environment (getArgs)
 import System.Process (createProcess, proc, StdStream( CreatePipe ), CreateProcess( .. ) )
 import GHC.IO.Handle (hGetContents)
-import Text.Printf
 
 getOutLine :: [String] -> String
 getOutLine = (!! 4) . reverse
