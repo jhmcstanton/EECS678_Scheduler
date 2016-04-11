@@ -35,11 +35,11 @@ typedef struct _job_t
    Comparison functions for each scheme
  */
 
-int RR_comp(const job_t *in_queue, const job_t *new_job){
+int RR_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((unused))  const job_t *new_job){
     return -1;
 }
 
-int FCFS_comp(const job_t *in_queue, const job_t *new_job){
+int FCFS_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((unused)) const job_t *new_job){
     return -1; 
 }
 
@@ -55,7 +55,7 @@ int PRI_comp(const job_t *in_queue, const job_t *new_job){
     return in_queue->priority <= new_job->priority;
 }
 
-int PPRI_comp(const job_t *in_queue, const job_t *new_job){
+int PPRI_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((unused)) const job_t *new_job){
     return -1; // fix this
 }
 
@@ -138,6 +138,9 @@ void check_response_time(int time){
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
+  printf("in scheduler_new_job, job_number: %d, time: %d, running_time: %d, priority : %d\n",
+	 job_number, time, running_time, priority);
+  int cur_running_job     = scheduler.jobs.size == 0 ? -1 : ((job_t *) priqueue_peek(&scheduler.jobs))->job_id;
     job_t *new_job = (job_t *) malloc(1 * sizeof(job_t));
     new_job->job_id         = job_number;
     new_job->arrival_time   = time;
@@ -150,7 +153,11 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     check_response_time(time);
 
     // tentative, update this if multiple core option is done
-    return 0;
+    if(((job_t *)priqueue_peek(&scheduler.jobs))->job_id != cur_running_job){
+      return 0;
+    } else {
+      return -1;
+    }
 }
 
 
@@ -168,8 +175,10 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
   @return job_number of the job that should be scheduled to run on core core_id
   @return -1 if core should remain idle.
  */
-int scheduler_job_finished(int core_id, int job_number, int time)
+int scheduler_job_finished(__attribute__ ((unused)) int core_id, __attribute__ ((unused)) int job_number, int time)
 {
+  printf("in scheduler_job_finished ");
+  printf("core_id: %d, job_id: %d\n", core_id, job_number);
     job_t *job_cursor = priqueue_poll(&scheduler.jobs);
     int turn_around_time, wait_time;
     if(job_cursor != NULL){
@@ -214,7 +223,7 @@ int scheduler_job_finished(int core_id, int job_number, int time)
   @return job_number of the job that should be scheduled on core cord_id
   @return -1 if core should remain idle
  */
-int scheduler_quantum_expired(int core_id, int time)
+int scheduler_quantum_expired(__attribute__ ((unused)) int core_id, int time)
 {
     // no jobs, remain idle
     if(scheduler.jobs.size == 0){
@@ -302,8 +311,6 @@ void debug_print(const job_t *job){
  */
 void scheduler_show_queue()
 {
-    //    priqueue_mut_map(&scheduler.jobs, debug_print);
-    node_t *cursor = scheduler.jobs.head;
     
     printf("\n             Job |       Priority |        Arrival |       Run-Time | Time-Remaining\n");
     printf("-----------------|----------------|----------------|----------------|---------------\n");

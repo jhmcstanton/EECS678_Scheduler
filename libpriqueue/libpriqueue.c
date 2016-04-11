@@ -150,7 +150,7 @@ int priqueue_remove(priqueue_t *q, void *ptr)
     }
 
     node_t *cursor = q->head, *prev_cursor = NULL;
-    int num_removed = 0, index = 0;
+    int num_removed = 0;
     while(cursor != NULL){
 	// ... assuming this thing only has integers...
         if(*(int *)ptr == *(int *)(cursor->element)){
