@@ -43,4 +43,4 @@ test_utils.o: test_utils.c test_utils.h
 
 .PHONY : clean
 clean:
-	rm -rf simulator queuetest *.o libscheduler/*.o libpriqueue/*.o doc/html $(LIBPRIQUEUE_TEST_DIR)*.o
+	rm -rf simulator queuetest *.o libscheduler/*.o libpriqueue/*.o doc/html $(LIBPRIQUEUE_TEST_DIR)*.o *~ libscheduler/*~ libpriqueue/*~ $(LIBPRIQUEUE_TEST_DIR)*~
