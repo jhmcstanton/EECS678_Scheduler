@@ -146,8 +146,9 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     new_job->time_remaining = running_time;
     new_job->responded_prev = false;
 
-    priqueue_offer(&scheduler.jobs, &new_job);
+    priqueue_offer(&scheduler.jobs, new_job);
     check_response_time(time);
+
     // tentative, update this if multiple core option is done
     return 0;
 }
@@ -284,7 +285,8 @@ void scheduler_clean_up()
 }
 
 void debug_print(job_t *job){
-    printf("Job [%d]: Priority: [%d], Arrival : [%d], Run-Time: [%d], Time-Remaining: [%d]\n",
+    //    printf("  Job [%d]: Priority: [%d], Arrival : [%d], Run-Time: [%d], Time-Remaining: [%d]\n",
+    printf("  %14d | %14d | %14d | %14d | %14d \n",
 	   job->job_id, job->priority, job->arrival_time, job->run_time, job->time_remaining);
 }
 
@@ -304,6 +306,8 @@ void scheduler_show_queue()
     //    priqueue_mut_map(&scheduler.jobs, debug_print);
     node_t *cursor = scheduler.jobs.head;
     
+    printf("\n             Job |       Priority |        Arrival |       Run-Time | Time-Remaining\n");
+    printf("-----------------|----------------|----------------|----------------|---------------\n");
     while(cursor != NULL){
 	debug_print(cursor->element);
 	cursor = cursor->next;

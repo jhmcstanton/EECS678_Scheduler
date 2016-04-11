@@ -28,30 +28,6 @@ void priqueue_init(priqueue_t *q, comp_t comparer)
 }
 
 /**
-   Inserts element into internal linked list.
- */
-/*int insert_with(node_t *cursor, node_t* new_elem, comp_t comparer){
-    // the current node has >= priority to the next element, new_element recurses
-    printf("cursor: %d, new: %d\n", *(int*)cursor->element, *(int*)new_elem->element);
-    if(comparer(cursor->element, new_elem->element) <= 0){
-	//	printf("cursor >= new\n");
-	// there's nothing left, slap it on the end
-	if(cursor->next == NULL) {
-	    //  printf("new is now tail\n");
-	    cursor->next = new_elem;
-	    return 1;
-	} else { // there is something left, more comparisons need to be done
-	    //printf("recursing \n");
-	    return 1 + insert_with(cursor->next, new_elem, comparer);    
-	}
-    } else { // the new_elem has highest priority, displace the current head of the queue
-	//	printf("new_elem > head\n");
-	new_elem->next = cursor;
-	return 0;
-    }
-}*/
-
-/**
   Inserts the specified element into this priority queue.
 
   @param q a pointer to an instance of the priqueue_t data structure
@@ -65,29 +41,26 @@ int priqueue_offer(priqueue_t *q, void *ptr)
     new_elem->element = ptr;
     new_elem->next    = NULL;
     node_t *cursor = q->head, *prev_cursor = NULL; 	
-    if(q->size == 0){
-	q->head = new_elem;
-	q->head->next = NULL;	
-    } else {
-	while(cursor != NULL){
-	    if(q->comparer(cursor->element, new_elem->element) <= 0){
-		index++;
-		if(cursor->next == NULL){
-		    cursor->next = new_elem;
-		    break;
-		} else {
-		    prev_cursor = cursor;
-		    cursor      = cursor->next;
-		}
-	    } else {
-		new_elem->next    = cursor;
-		if(prev_cursor != NULL){
-		    prev_cursor->next = new_elem;
-		}
+
+    while(cursor != NULL){
+	if(q->comparer(cursor->element, new_elem->element) <= 0){
+	    index++;
+	    if(cursor->next == NULL){
+		cursor->next = new_elem;
 		break;
+	    } else {
+		prev_cursor = cursor;
+		cursor      = cursor->next;
 	    }
+	} else {
+	    new_elem->next    = cursor;
+	    if(prev_cursor != NULL){
+		prev_cursor->next = new_elem;
+	    }
+	    break;
 	}
     }
+    
     if(index == 0){
 	q->head = new_elem;
     }
