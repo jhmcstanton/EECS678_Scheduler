@@ -56,7 +56,11 @@ int PSJF_comp(const job_t *in_queue, const job_t *new_job){
 }
 
 int PRI_comp(const job_t *in_queue, const job_t *new_job){
-    return in_queue->priority <= new_job->priority;
+    if(in_queue->responded_prev){
+      return -1;
+    } else {
+      return in_queue->priority - new_job->priority;
+    }
 }
 
 int PPRI_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((unused)) const job_t *new_job){
