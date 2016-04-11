@@ -44,7 +44,11 @@ int FCFS_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((un
 }
 
 int SJF_comp(const job_t *in_queue, const job_t *new_job){
-    return in_queue->run_time >= new_job->run_time;
+    if (in_queue->responded_prev){
+        return -1;
+    } else {
+        return in_queue->run_time - new_job->run_time;
+    }
 }
 
 int PSJF_comp(const job_t *in_queue, const job_t *new_job){
