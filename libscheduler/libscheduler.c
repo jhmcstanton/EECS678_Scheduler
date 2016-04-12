@@ -27,7 +27,7 @@ typedef struct _job_t
     int arrival_time;
     int run_time;
     int job_id;
-    bool responded_prev;
+    int last_ran;
 } job_t;
 
 
@@ -44,19 +44,19 @@ int FCFS_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((un
 }
 
 int SJF_comp(const job_t *in_queue, const job_t *new_job){
-    if (in_queue->responded_prev){
+    if (in_queue->last_ran != -1){
         return -1;
     } else {
         return in_queue->run_time - new_job->run_time;
     }
 }
 
-int PSJF_comp(const job_t *in_queue, const job_t *new_job){
-    return in_queue->time_remaining >= new_job->time_remaining;
+int PSJF_comp(const job_t *in_queue, const job_t *new_job){    
+    return in_queue->time_remaining - new_job->time_remaining;
 }
 
 int PRI_comp(const job_t *in_queue, const job_t *new_job){
-    if(in_queue->responded_prev){
+    if(in_queue->last_ran != -1){
       return -1;
     } else {
       return in_queue->priority - new_job->priority;
@@ -114,8 +114,8 @@ void check_response_time(int time){
     job_t *job = priqueue_peek(&scheduler.jobs);
     if(job == NULL){
 	return;
-    } else if(!job->responded_prev){
-	job->responded_prev = true;
+    } else if(job->last_ran == -1){
+	job->last_ran = time;
 	if(scheduler.avg_resp_time == 0){
 	    scheduler.avg_resp_time = time - job->arrival_time;
 	} else {
@@ -146,24 +146,31 @@ void check_response_time(int time){
  */
 int scheduler_new_job(int job_number, int time, int running_time, int priority)
 {
-  printf("in scheduler_new_job, job_number: %d, time: %d, running_time: %d, priority : %d\n",
-	 job_number, time, running_time, priority);
-  int cur_running_job     = scheduler.jobs.size == 0 ? -1 : ((job_t *) priqueue_peek(&scheduler.jobs))->job_id;
+    int cur_running_job     = -1 ; 
+
+    // update the remaining time if needed
+    job_t *cur_job = priqueue_peek(&scheduler.jobs);
+    if(cur_job != NULL){
+        cur_running_job         = cur_job->job_id;
+	cur_job->time_remaining = cur_job->time_remaining - (time - cur_job->last_ran) ;
+    }
+    
     job_t *new_job = (job_t *) malloc(1 * sizeof(job_t));
     new_job->job_id         = job_number;
     new_job->arrival_time   = time;
     new_job->run_time       = running_time;
     new_job->priority       = priority;
     new_job->time_remaining = running_time;
-    new_job->responded_prev = false;
+    new_job->last_ran       = -1;
 
     priqueue_offer(&scheduler.jobs, new_job);
     check_response_time(time);
 
     // tentative, update this if multiple core option is done
     if(((job_t *)priqueue_peek(&scheduler.jobs))->job_id != cur_running_job){
+      new_job->last_ran = time;
       return 0;
-    } else {
+    } else { 
       return -1;
     }
 }
@@ -185,8 +192,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
  */
 int scheduler_job_finished(__attribute__ ((unused)) int core_id, __attribute__ ((unused)) int job_number, int time)
 {
-  printf("in scheduler_job_finished ");
-  printf("core_id: %d, job_id: %d\n", core_id, job_number);
     job_t *job_cursor = priqueue_poll(&scheduler.jobs);
     int turn_around_time, wait_time;
     if(job_cursor != NULL){
@@ -214,6 +219,7 @@ int scheduler_job_finished(__attribute__ ((unused)) int core_id, __attribute__ (
 	check_response_time(time);
 
 	job_cursor = priqueue_peek(&scheduler.jobs);
+	job_cursor->last_ran = time;
 	return job_cursor->job_id;
     }    
 }
