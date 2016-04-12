@@ -21,9 +21,7 @@ typedef struct _scheduler_t_ {
     int num_cores;
     scheme_t scheme;
     comp_t pri_comp;
-    // float avg_resp_time;
-    float avg_wait_time;
-        float avg_turn_around_time;
+
     // statistics
     int num_jobs_run; 
     int num_jobs_finished;

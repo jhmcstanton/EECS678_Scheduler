@@ -104,10 +104,6 @@ void scheduler_start_up(int cores, scheme_t scheme)
     scheduler.scheme    = scheme;
     scheduler.pri_comp  = get_comparer(scheme);
     priqueue_init(&scheduler.jobs, scheduler.pri_comp);
-
-    //    scheduler.avg_resp_time        = 0;
-    //scheduler.avg_wait_time        = 0;
-    //scheduler.avg_turn_around_time = 0;
     
     scheduler.num_jobs_run      = 0;
     scheduler.num_jobs_finished = 0;
