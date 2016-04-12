@@ -63,8 +63,8 @@ int PRI_comp(const job_t *in_queue, const job_t *new_job){
     }
 }
 
-int PPRI_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((unused)) const job_t *new_job){
-    return -1; // fix this
+int PPRI_comp(const job_t *in_queue, const job_t *new_job){
+    return in_queue->priority - new_job->priority;
 }
 
 

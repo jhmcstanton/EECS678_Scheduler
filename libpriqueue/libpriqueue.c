@@ -242,9 +242,9 @@ void priqueue_destroy(priqueue_t *q)
 /**
  This allows the user to perform an operation on every element of the queue. 
 
- @param q, the queue whose elements will be operated on
- @param ap, the function to apply across all elements
- @return nothing, this is to be clear that function, ap, can mutate the elements (although
+ @param q - the queue whose elements will be operated on
+ @param ap - the function to apply across all elements
+ @return nothing - this is to be clear that function, ap, can mutate the elements (although
          that is not necessarily the case)
  */
 void priqueue_mut_map(priqueue_t *q, map_apply_t ap){
