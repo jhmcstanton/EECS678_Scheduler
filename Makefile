@@ -10,6 +10,7 @@ LIBPRIQUEUE_DIR          = libpriqueue/
 LIBPRIQUEUE_TEST_DIR     = $(LIBPRIQUEUE_DIR)tests/
 LIBPRIQUEUE_TEST_SRCS    = $(wildcard $(LIBPRIQUEUE_TEST_DIR)*.c)
 LIBPRIQUEUE_TEST_OBJECTS = $(patsubst %.c, %.o, $(LIBPRIQUEUE_TEST_SRCS))
+SCHEMES                  = fcfs sjf psjf pri ppri rr1 rr2 rr4
 
 all: simulator queuetest doc/html
 
@@ -18,6 +19,11 @@ doc/html: doc/Doxyfile libpriqueue/libpriqueue.c libscheduler/libscheduler.c
 
 simulator: simulator.o libscheduler/libscheduler.o libpriqueue/libpriqueue.o
 	$(CC) $^ -o $@
+
+sim_runs: simulator
+	for scheme in $(SCHEMES) ; do \
+		runghc test_results.hs 1 $$scheme ; \
+	done
 
 queuetest: queuetest.o libpriqueue/libpriqueue.o $(LIBPRIQUEUE_TEST_OBJECTS) test_utils.o 
 	$(CC) $^ -o $@
