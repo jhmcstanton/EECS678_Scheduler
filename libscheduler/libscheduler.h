@@ -8,6 +8,9 @@
 
 #include <stdbool.h>
 
+#define MIN_SIZE_ARRS 1000
+#define SCALE_SIZE    2
+
 /**
   Constants which represent the different scheduling algorithms
 */
@@ -18,9 +21,16 @@ typedef struct _scheduler_t_ {
     int num_cores;
     scheme_t scheme;
     comp_t pri_comp;
-    float avg_resp_time;
+    // float avg_resp_time;
     float avg_wait_time;
-    float avg_turn_around_time;
+        float avg_turn_around_time;
+    // statistics
+    int num_jobs_run; 
+    int num_jobs_finished;
+    int stat_arr_size;
+    int *waiting_times;
+    int *turn_around_times;
+    int *response_times;
 } scheduler_t;
 
 void  scheduler_start_up               (int cores, scheme_t scheme);

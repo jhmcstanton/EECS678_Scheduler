@@ -105,9 +105,16 @@ void scheduler_start_up(int cores, scheme_t scheme)
     scheduler.pri_comp  = get_comparer(scheme);
     priqueue_init(&scheduler.jobs, scheduler.pri_comp);
 
-    scheduler.avg_resp_time        = 0;
-    scheduler.avg_wait_time        = 0;
-    scheduler.avg_turn_around_time = 0;
+    //    scheduler.avg_resp_time        = 0;
+    //scheduler.avg_wait_time        = 0;
+    //scheduler.avg_turn_around_time = 0;
+    
+    scheduler.num_jobs_run      = 0;
+    scheduler.num_jobs_finished = 0;
+    scheduler.stat_arr_size     = MIN_SIZE_ARRS;
+    scheduler.waiting_times     = (int *) malloc(MIN_SIZE_ARRS * sizeof(int));
+    scheduler.turn_around_times = (int *) malloc(MIN_SIZE_ARRS * sizeof(int));
+    scheduler.response_times    = (int *) malloc(MIN_SIZE_ARRS * sizeof(int));
 }
 
 void check_response_time(int time){
@@ -115,12 +122,18 @@ void check_response_time(int time){
     if(job == NULL){
 	return;
     } else if(job->last_ran == -1){
-	job->last_ran = time;
-	if(scheduler.avg_resp_time == 0){
-	    scheduler.avg_resp_time = time - job->arrival_time;
-	} else {
-	    scheduler.avg_resp_time = (scheduler.avg_resp_time + (time - job->arrival_time)) / 2;
+	scheduler.num_jobs_run++;
+	
+	if(scheduler.num_jobs_run == scheduler.stat_arr_size){
+	    scheduler.stat_arr_size     *= SCALE_SIZE;
+	    scheduler.waiting_times      = realloc(scheduler.waiting_times, scheduler.stat_arr_size * sizeof(int));
+	    scheduler.turn_around_times  = realloc(scheduler.turn_around_times, scheduler.stat_arr_size * sizeof(int));
+	    scheduler.response_times     = realloc(scheduler.response_times, scheduler.stat_arr_size * sizeof(int));
 	}
+
+	job->last_ran = time;
+       
+	scheduler.response_times[scheduler.num_jobs_run - 1] = time - job->arrival_time;
     }
 }
 
@@ -163,12 +176,13 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     new_job->time_remaining = running_time;
     new_job->last_ran       = -1;
 
+
     priqueue_offer(&scheduler.jobs, new_job);
     check_response_time(time);
 
     // tentative, update this if multiple core option is done
     if(((job_t *)priqueue_peek(&scheduler.jobs))->job_id != cur_running_job){
-      new_job->last_ran = time;
+	//      new_job->last_ran = time;
       return 0;
     } else { 
       return -1;
@@ -193,23 +207,16 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 int scheduler_job_finished(__attribute__ ((unused)) int core_id, __attribute__ ((unused)) int job_number, int time)
 {
     job_t *job_cursor = priqueue_poll(&scheduler.jobs);
+    scheduler.num_jobs_finished++;
     int turn_around_time, wait_time;
     if(job_cursor != NULL){
 	// get turnaround time updates
 	turn_around_time = time - job_cursor->arrival_time;
 	wait_time        = time - job_cursor->arrival_time - job_cursor->run_time;
-	if(scheduler.avg_turn_around_time == 0){
-	    scheduler.avg_turn_around_time = turn_around_time;
-	} else {
-	    scheduler.avg_turn_around_time  = (scheduler.avg_turn_around_time + turn_around_time) / 2;
-	}
 
-	// get wait time updates
-	if(scheduler.avg_wait_time == 0){
-	    scheduler.avg_wait_time = wait_time;
-	} else {
-	    scheduler.avg_wait_time = (scheduler.avg_wait_time + wait_time) / 2;
-	}
+	scheduler.waiting_times[scheduler.num_jobs_finished     - 1] = wait_time;
+	scheduler.turn_around_times[scheduler.num_jobs_finished - 1] = turn_around_time;
+
 	free(job_cursor);
     }
     // still assuming single core
@@ -252,6 +259,15 @@ int scheduler_quantum_expired(__attribute__ ((unused)) int core_id, int time)
 }
 
 
+float get_avg(int *buffer){
+    int i;
+    float avg = 0;
+    for(i = 0; i < scheduler.num_jobs_run; i++){
+	avg += buffer[i];
+    }
+    return avg / scheduler.num_jobs_run;
+}
+
 /**
   Returns the average waiting time of all jobs scheduled by your scheduler.
 
@@ -261,7 +277,7 @@ int scheduler_quantum_expired(__attribute__ ((unused)) int core_id, int time)
  */
 float scheduler_average_waiting_time()
 {
-    return scheduler.avg_wait_time;
+    return get_avg(scheduler.waiting_times);
 }
 
 
@@ -274,7 +290,7 @@ float scheduler_average_waiting_time()
  */
 float scheduler_average_turnaround_time()
 {
-    return scheduler.avg_turn_around_time;
+    return get_avg(scheduler.turn_around_times);
 }
 
 
@@ -287,7 +303,7 @@ float scheduler_average_turnaround_time()
  */
 float scheduler_average_response_time()
 {
-    return scheduler.avg_resp_time;
+    return get_avg(scheduler.response_times);
 }
 
 
@@ -305,6 +321,10 @@ void scheduler_clean_up()
 	free(job_cursor);
     }
     priqueue_destroy(&scheduler.jobs);
+    
+    free(scheduler.waiting_times);
+    free(scheduler.turn_around_times);
+    free(scheduler.response_times);
 }
 
 void debug_print(const job_t *job){
@@ -325,7 +345,6 @@ void debug_print(const job_t *job){
  */
 void scheduler_show_queue()
 {
-    
     printf("\n             Job |       Priority |        Arrival |       Run-Time | Time-Remaining\n");
     printf("-----------------|----------------|----------------|----------------|---------------\n");
     priqueue_mut_map(&scheduler.jobs, (map_apply_t) debug_print);
