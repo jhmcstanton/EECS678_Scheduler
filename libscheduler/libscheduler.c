@@ -27,7 +27,7 @@ typedef struct _job_t
     int arrival_time;
     int run_time;
     int job_id;
-    int last_ran;
+    int first_run;
 } job_t;
 
 
@@ -44,7 +44,7 @@ int FCFS_comp(__attribute__ ((unused)) const job_t *in_queue, __attribute__ ((un
 }
 
 int SJF_comp(const job_t *in_queue, const job_t *new_job){
-    if (in_queue->last_ran != -1){
+    if (in_queue->first_run != -1){
         return -1;
     } else {
         return in_queue->run_time - new_job->run_time;
@@ -56,7 +56,7 @@ int PSJF_comp(const job_t *in_queue, const job_t *new_job){
 }
 
 int PRI_comp(const job_t *in_queue, const job_t *new_job){
-    if(in_queue->last_ran != -1){
+    if(in_queue->first_run != -1){
       return -1;
     } else {
       return in_queue->priority - new_job->priority;
@@ -117,8 +117,16 @@ void check_response_time(int time){
     job_t *job = priqueue_peek(&scheduler.jobs);
     if(job == NULL){
 	return;
-    } else if(job->last_ran == -1){
-	scheduler.num_jobs_run++;
+    } else if(job->first_run == -1){
+
+	job_t *prev_first_job = priqueue_at(&scheduler.jobs, 1);
+
+	// this job would have been scheduled now, but got preempted before starting
+	if(prev_first_job != NULL && prev_first_job->first_run == time){
+	    prev_first_job->first_run = -1;
+	}else {
+	    scheduler.num_jobs_run++;
+	}
 	
 	if(scheduler.num_jobs_run == scheduler.stat_arr_size){
 	    scheduler.stat_arr_size     *= SCALE_SIZE;
@@ -127,8 +135,8 @@ void check_response_time(int time){
 	    scheduler.response_times     = realloc(scheduler.response_times, scheduler.stat_arr_size * sizeof(int));
 	}
 
-	job->last_ran = time;
-       
+	job->first_run = time;
+
 	scheduler.response_times[scheduler.num_jobs_run - 1] = time - job->arrival_time;
     }
 }
@@ -161,7 +169,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     job_t *cur_job = priqueue_peek(&scheduler.jobs);
     if(cur_job != NULL){
         cur_running_job         = cur_job->job_id;
-	cur_job->time_remaining = cur_job->time_remaining - (time - cur_job->last_ran) ;
+	cur_job->time_remaining = cur_job->time_remaining - (time - cur_job->first_run) ;
     }
     
     job_t *new_job = (job_t *) malloc(1 * sizeof(job_t));
@@ -170,7 +178,7 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
     new_job->run_time       = running_time;
     new_job->priority       = priority;
     new_job->time_remaining = running_time;
-    new_job->last_ran       = -1;
+    new_job->first_run       = -1;
 
 
     priqueue_offer(&scheduler.jobs, new_job);
@@ -178,7 +186,6 @@ int scheduler_new_job(int job_number, int time, int running_time, int priority)
 
     // tentative, update this if multiple core option is done
     if(((job_t *)priqueue_peek(&scheduler.jobs))->job_id != cur_running_job){
-	//      new_job->last_ran = time;
       return 0;
     } else { 
       return -1;
@@ -222,7 +229,6 @@ int scheduler_job_finished(__attribute__ ((unused)) int core_id, __attribute__ (
 	check_response_time(time);
 
 	job_cursor = priqueue_peek(&scheduler.jobs);
-	job_cursor->last_ran = time;
 	return job_cursor->job_id;
     }    
 }

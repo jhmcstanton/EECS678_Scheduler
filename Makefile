@@ -22,6 +22,7 @@ simulator: simulator.o libscheduler/libscheduler.o libpriqueue/libpriqueue.o
 
 sim_runs: simulator
 	for scheme in $(SCHEMES) ; do \
+		echo $$scheme ; \
 		runghc test_results.hs 1 $$scheme ; \
 	done
 
